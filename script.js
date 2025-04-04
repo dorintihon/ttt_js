@@ -18,43 +18,24 @@ const Gameboard = (() => {
         console.log(boardStr);
     };
 
-    const resetBoard = () => {
-        for (let i = 0; i < board.length; i++) {
-            board[i] = null;
-        }
-    };
+    const getBoard = () => board;
+
+    const resetBoard = () => board.fill(null);
 
     const setMark = (index, mark) => {
-        if (index < 0 || index > 8) {
-            console.log("Invalid index");
-            return;
-        }
-        if (board[index] !== null) {
-            console.log("Square already taken");
-            return;
-        }
+        if (index < 0 || index > 8 || board[index] !== null) return false;
         board[index] = mark;
-    }
-
-    const getSquare = (index) => {
-        if (index < 0 || index > 8) {
-            console.log("Invalid index");
-            return;
-        }
-        return board[index];
-    }
-
-    const isFull = () => {
-        for (let i = 0; i < board.length; i++) {
-            if (board[i] === null) {
-                return false;
-            }
-        }
         return true;
-    }
+    };
+
+    const getSquare = index => board[index];
+
+    const isFull = () => board.every(cell => cell !== null);
+
 
     return {
         printBoard,
+        getBoard,
         resetBoard,
         setMark,
         getSquare,
@@ -64,52 +45,53 @@ const Gameboard = (() => {
 
 
 const Player = (name, mark) => {
-    
-    const getName = () => {
-        return name;
-    };
-    const getMark = () => {
-        return mark;
-    }
-
-    const setName = (newName) => {
-        name = newName;
-    }
-    const setMark = (newMark) => {
-        mark = newMark;
-    }
-
+    let score = 0;
     return {
-        getName,
-        getMark,
-        setName,
-        setMark
+        getScore: () => score,
+        getName: () => name,
+        getMark: () => mark,
+        setName: newName => { name = newName; },
+        setMark: newMark => { mark = newMark; },
+        addScore: () => { score += 1; },
+        resetScore: () => { score = 0; },
     };
-}
+};
+
+
 
 const GameLogic = (() => {
+    let gameStarted = false;
+
+
     const players = [
-        Player("Player 1", "X"),
-        Player("Player 2", "O")
+        Player(null, "X"),
+        Player(null, "O")
     ];
 
     let currentPlayer = players[0];
+    let lastLoser = null;
 
     const switchPlayer = () => {
         currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
     }
 
+    const isGameStarted = () => gameStarted;
+    const startGame = () => gameStarted = true;
+    const stopGame = () => gameStarted = false;
+
     const getCurrentPlayer = () => {
         return currentPlayer;
     }
 
-    const makeMove = (index) => {
-        if (Gameboard.getSquare(index) !== null) {
-            console.log("Square already taken");
-            return;
-        }
-        Gameboard.setMark(index, currentPlayer.getMark());
+    const getOpponent = () => {
+        return currentPlayer === players[0] ? players[1] : players[0];
     }
+
+    const setCurrentPlayer = (player) => {
+        currentPlayer = player;
+    }
+
+    const makeMove = (index) => Gameboard.setMark(index, currentPlayer.getMark());
 
     const winningCombinations = [
         [0, 1, 2],
@@ -123,13 +105,16 @@ const GameLogic = (() => {
     ];
 
     const checkWin = (mark) => {
-        for (let i = 0; i < winningCombinations.length; i++) {
-            const [a, b, c] = winningCombinations[i];
-            if (Gameboard.getSquare(a) === mark && Gameboard.getSquare(b) === mark && Gameboard.getSquare(c) === mark) {
-                return true;
-            }
+        const hasWon = winningCombinations.some(([a, b, c]) =>
+            [a, b, c].every(i => Gameboard.getSquare(i) === mark)
+        );
+
+        if (hasWon) {
+            // Store the loser to start next round
+            lastLoser = getOpponent();
         }
-        return false;
+
+        return hasWon;
     };
 
     const checkDraw = () => {
@@ -138,12 +123,17 @@ const GameLogic = (() => {
 
     const resetGame = () => {
         Gameboard.resetBoard();
-        currentPlayer = players[0];
-        document.querySelectorAll('.cell').forEach(cell => {
-            cell.textContent = '';
-        });
-        document.querySelector('.player').textContent = `${currentPlayer.getName()}'s turn (${currentPlayer.getMark()})`;
+        // If there's a stored loser, make them start
+        if (lastLoser) {
+            setCurrentPlayer(lastLoser);
+        } else {
+            // Default to player1 if no game has been won yet
+            setCurrentPlayer(players[0]);
+        }
     };
+
+    const getPlayer1 = () => players[0];
+    const getPlayer2 = () => players[1];
 
     return {
         checkWin,
@@ -152,39 +142,113 @@ const GameLogic = (() => {
         makeMove,
         getCurrentPlayer,
         switchPlayer,
+        getPlayer1,
+        getPlayer2,
+        startGame,
+        stopGame,
+        isGameStarted
     };
 })();
 
 
-document.querySelectorAll('.cell').forEach(cell => {
-    cell.addEventListener('click', (e) => {
-        let text = document.querySelector('.player');
+const DisplayController = (() => {
+    const cells = document.querySelectorAll('.cell');
+    const message = document.querySelector('.player');
+    const resetButton = document.querySelector('.reset');
+    const submitButton = document.querySelector('.submitBtn');
+    const player1Score = document.querySelector('.player1-score');
+    const player2Score = document.querySelector('.player2-score');
+
+    const renderBoard = () => {
+        Gameboard.getBoard().forEach((mark, index) => {
+            cells[index].textContent = mark === null ? "" : mark;
+        });
+    };
+
+    const setMessage = msg => {
+        message.textContent = msg;
+    }
+
+    const updateScores = () => {
+        player1Score.textContent = `${GameLogic.getPlayer1().getName()} score: ${GameLogic.getPlayer1().getScore()}`;
+        player2Score.textContent = `${GameLogic.getPlayer2().getName()} score: ${GameLogic.getPlayer2().getScore()}`;
+    }
+
+    const removeCellClickEvents = () => {
+        cells.forEach(cell => cell.removeEventListener('click', handleCellClick));
+    }
+
+    const handleCellClick = (e) => {
         const index = parseInt(e.target.getAttribute('id'));
-        let currentPlayer = GameLogic.getCurrentPlayer();
-        
-        if (Gameboard.getSquare(index) !== null) return; // prevent overwrite
-        
-        e.target.textContent = currentPlayer.getMark();
-        GameLogic.makeMove(index);
+        const currentPlayer = GameLogic.getCurrentPlayer();
+
+        if (!GameLogic.makeMove(index)) return; // prevent overwrite the same cell
+
+        renderBoard();
 
         if (GameLogic.checkWin(currentPlayer.getMark())) {
-            text.textContent = `${currentPlayer.getName()} wins!`;
+            setMessage(`${currentPlayer.getName()} wins!`);
+            currentPlayer.addScore();
+            updateScores();
+            removeCellClickEvents(); // Disable further clicks
             return;
-        } else if (GameLogic.checkDraw()) {
-            text.textContent = "It's a draw!";
+        }else if (GameLogic.checkDraw()) {
+            setMessage("It's a draw!");
+            removeCellClickEvents(); // Disable further clicks
             return;
         } else {
             GameLogic.switchPlayer();
-            currentPlayer = GameLogic.getCurrentPlayer();
-            text.textContent = `${currentPlayer.getName()}'s turn (${currentPlayer.getMark()})`;
+            const nextPlayer = GameLogic.getCurrentPlayer();
+            setMessage(`${nextPlayer.getName()}'s turn (${nextPlayer.getMark()})`);
         }
-    }); 
-});
+    };
+
+    const bindEvents = () => {
+        resetButton.addEventListener('click', () => {
+            GameLogic.resetGame();
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
+            renderBoard();
+            setMessage(`${GameLogic.getCurrentPlayer().getName()}'s turn (${GameLogic.getCurrentPlayer().getMark()})`);
+        });
+    
+        submitButton.addEventListener('click', () => {
+            const player1Name = document.getElementById('player1-name').value.trim();
+            const player2Name = document.getElementById('player2-name').value.trim();
+
+            if (player1Name === "" || player2Name === "") {
+                alert("Please enter names for both players.");
+                return;
+            }
+
+            GameLogic.getPlayer1().setName(player1Name);
+            GameLogic.getPlayer2().setName(player2Name);
+
+            updateScores();
+            setMessage(`${GameLogic.getCurrentPlayer().getName()}'s turn (${GameLogic.getCurrentPlayer().getMark()})`);
+            
+            // 🔥 Now bind cell click events since the game has officially started
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
+
+            resetButton.disabled = false;
+    
+            renderBoard();
+        });
+    };
+    
+
+    const init = () => {
+        bindEvents();
+        renderBoard();
+        setMessage(`Enter player names and click "Start Game"`);
+    };
+
+    return { init };
+})();
 
 
 
-// Reset button functionality
-document.querySelector('.reset').addEventListener('click', () => {
-    GameLogic.resetGame();
-});
-
+DisplayController.init();
