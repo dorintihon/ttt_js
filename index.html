@@ -8,8 +8,8 @@
 </head>
 <body>
     <div class="scoreboard">
-        <h1 class="player1-score">Player 1 score: 0</h1>
-        <h1 class="player2-score">Player 2 score: 0</h1>
+        <h1 class="player1-score"></h1>
+        <h1 class="player2-score"></h1>
         <h1 class="player"></h1>
     </div>
     <div> 
@@ -27,7 +27,18 @@
                 <div class="cell" id="8"></div>
 
         </div>
-        <button class="reset">Reset Game</button>
+        <button class="reset" disabled>Reset Game</button>
+    </div>
+    <div class="player-name">
+        <h1>Enter Players Name</h1>
+        <form id="playerForm">
+            <label for="playerName">Player 1 Name:</label>
+            <input type="text" id="player1-name" placeholder="Enter your name" required>
+            <label for="playerName">Player 2 Name:</label>
+            <input type="text" id="player2-name" placeholder="Enter your name" required>
+            <button class="submitBtn" type="button">Start Game</button>
+        </form>
+        
     </div>
     <script src="script.js"></script>
 </body>

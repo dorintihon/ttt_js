@@ -60,19 +60,35 @@ const Player = (name, mark) => {
 
 
 const GameLogic = (() => {
+    let gameStarted = false;
+
+
     const players = [
-        Player("Dorin", "X"),
-        Player("Doina", "O")
+        Player(null, "X"),
+        Player(null, "O")
     ];
 
     let currentPlayer = players[0];
+    let lastLoser = null;
 
     const switchPlayer = () => {
         currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
     }
 
+    const isGameStarted = () => gameStarted;
+    const startGame = () => gameStarted = true;
+    const stopGame = () => gameStarted = false;
+
     const getCurrentPlayer = () => {
         return currentPlayer;
+    }
+
+    const getOpponent = () => {
+        return currentPlayer === players[0] ? players[1] : players[0];
+    }
+
+    const setCurrentPlayer = (player) => {
+        currentPlayer = player;
     }
 
     const makeMove = (index) => Gameboard.setMark(index, currentPlayer.getMark());
@@ -88,9 +104,18 @@ const GameLogic = (() => {
         [2, 4, 6]
     ];
 
-    const checkWin = (mark) => winningCombinations.some(([a, b, c]) =>
-        [a, b, c].every(i => Gameboard.getSquare(i) === mark)
-    );
+    const checkWin = (mark) => {
+        const hasWon = winningCombinations.some(([a, b, c]) =>
+            [a, b, c].every(i => Gameboard.getSquare(i) === mark)
+        );
+
+        if (hasWon) {
+            // Store the loser to start next round
+            lastLoser = getOpponent();
+        }
+
+        return hasWon;
+    };
 
     const checkDraw = () => {
         return Gameboard.isFull();
@@ -98,7 +123,13 @@ const GameLogic = (() => {
 
     const resetGame = () => {
         Gameboard.resetBoard();
-        currentPlayer = players[0];
+        // If there's a stored loser, make them start
+        if (lastLoser) {
+            setCurrentPlayer(lastLoser);
+        } else {
+            // Default to player1 if no game has been won yet
+            setCurrentPlayer(players[0]);
+        }
     };
 
     const getPlayer1 = () => players[0];
@@ -113,6 +144,9 @@ const GameLogic = (() => {
         switchPlayer,
         getPlayer1,
         getPlayer2,
+        startGame,
+        stopGame,
+        isGameStarted
     };
 })();
 
@@ -121,6 +155,7 @@ const DisplayController = (() => {
     const cells = document.querySelectorAll('.cell');
     const message = document.querySelector('.player');
     const resetButton = document.querySelector('.reset');
+    const submitButton = document.querySelector('.submitBtn');
     const player1Score = document.querySelector('.player1-score');
     const player2Score = document.querySelector('.player2-score');
 
@@ -169,19 +204,46 @@ const DisplayController = (() => {
     };
 
     const bindEvents = () => {
-        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
         resetButton.addEventListener('click', () => {
             GameLogic.resetGame();
-            cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
             renderBoard();
-            setMessage(`Player X Choose a square`);
+            setMessage(`${GameLogic.getCurrentPlayer().getName()}'s turn (${GameLogic.getCurrentPlayer().getMark()})`);
+        });
+    
+        submitButton.addEventListener('click', () => {
+            const player1Name = document.getElementById('player1-name').value.trim();
+            const player2Name = document.getElementById('player2-name').value.trim();
+
+            if (player1Name === "" || player2Name === "") {
+                alert("Please enter names for both players.");
+                return;
+            }
+
+            GameLogic.getPlayer1().setName(player1Name);
+            GameLogic.getPlayer2().setName(player2Name);
+
+            updateScores();
+            setMessage(`${GameLogic.getCurrentPlayer().getName()}'s turn (${GameLogic.getCurrentPlayer().getMark()})`);
+            
+            // 🔥 Now bind cell click events since the game has officially started
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
+
+            resetButton.disabled = false;
+    
+            renderBoard();
         });
     };
+    
 
     const init = () => {
         bindEvents();
         renderBoard();
-        setMessage(`Player X Choose a square`);
+        setMessage(`Enter player names and click "Start Game"`);
     };
 
     return { init };
