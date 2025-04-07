@@ -5,34 +5,39 @@
     gap: 5px;
 }
 
+
 .cell {
     width: 100px;
     height: 100px;
     background-color: rgb(201, 200, 200);
 }
 
-.scoreboard, .game, .gameboard, .player-info {
+/* .scoreboard, .game, .gameboard, .player-info {
     border: 1px solid black;
-}
+} */
 
 .game {
     display: grid;
     grid-template-rows: min-content min-content min-content;
+    gap: 15px;
 }
 
 .game > *, .player-info > *, #playerForm > *, .statusPanel > * , .scoreboard > *{
     margin: 0;
     justify-self: center;
+    
 }
 
 .player-info {
     display: grid;
-    grid-template-rows: repeat(4, min-content);
+    grid-template-rows: repeat(2, min-content);
+    gap: 15px;
 }
 
 #playerForm {
     display: grid;
     grid-template-rows: repeat(3, min-content);
+    gap: 15px;
 }
 .scoreboard {
     display: grid;

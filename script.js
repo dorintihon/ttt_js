@@ -114,6 +114,7 @@ const GameLogic = (() => {
             lastLoser = getOpponent();
         }
 
+
         return hasWon;
     };
 
@@ -146,7 +147,8 @@ const GameLogic = (() => {
         getPlayer2,
         startGame,
         stopGame,
-        isGameStarted
+        isGameStarted,
+        winningCombinations
     };
 })();
 
@@ -197,28 +199,25 @@ const DisplayController = (() => {
 
         if (GameLogic.checkWin(currentPlayer.getMark())) {
             setMessage(`${currentPlayer.getName()} wins!`);
-            e.target.style.backgroundColor = 'bisque';
-            cells.forEach(cell => {
-                cell.removeEventListener('mouseover', handleMouseOver);
-                cell.removeEventListener('mouseout', handleMouseOut);
+            disableCells(cells);
+            // Highlight winning cells
+            GameLogic.winningCombinations.forEach(combination => {
+                if (combination.every(i => Gameboard.getSquare(i) === currentPlayer.getMark())) {
+                    combination.forEach(i => {
+                        cells[i].style.backgroundColor = 'lightgreen';
+                    }
+                    );
+                }
             });
-
-            
-            
             
             currentPlayer.addScore();
             updateScores();
             removeCellClickEvents(); // Disable further clicks
-        
             return;
         }else if (GameLogic.checkDraw()) {
             setMessage("It's a draw!");
             removeCellClickEvents(); // Disable further clicks
-            cells.forEach(cell => {
-                if (cell.style.backgroundColor !== 'lightgreen') {
-                    cell.style.backgroundColor = 'lightgrey';
-                }
-            });
+            disableCells(cells);
             renderBoard();
             return;
         } else {
@@ -229,12 +228,24 @@ const DisplayController = (() => {
         }
     };
 
+    const disableCells = (cells) => {
+        cells.forEach(cell => {
+            cell.style.backgroundColor = 'lightgrey';
+
+            cell.removeEventListener('mouseover', handleMouseOver);
+            cell.removeEventListener('mouseout', handleMouseOut);
+        });
+    };
+
     const bindEvents = () => {
         resetButton.addEventListener('click', () => {
             GameLogic.resetGame();
             cells.forEach(cell => {
                 cell.addEventListener('click', handleCellClick);
                 cell.style.backgroundColor = 'bisque';
+
+                cell.addEventListener('mouseover', handleMouseOver);
+                cell.addEventListener('mouseout', handleMouseOut);
             });
             renderBoard();
             setMessage(`${GameLogic.getCurrentPlayer().getName()}'s turn (${GameLogic.getCurrentPlayer().getMark()})`);
@@ -260,13 +271,9 @@ const DisplayController = (() => {
             document.querySelector('.game').style.display = 'grid';
             document.querySelector('.scoreboard').style.display = 'grid';
 
-            
-            // 🔥 Now bind cell click events since the game has officially started
-            cells.forEach(cell => {
-                cell.addEventListener('click', handleCellClick);
-            });
 
             cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
                 cell.style.backgroundColor = 'bisque';
                 
                 cell.addEventListener('mouseover', handleMouseOver);
@@ -296,6 +303,7 @@ const DisplayController = (() => {
     };
 
     return { init };
+
 })();
 
 
