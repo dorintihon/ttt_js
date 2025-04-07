@@ -7,14 +7,16 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="scoreboard">
-        <h1 class="player1-score"></h1>
-        <h1 class="player2-score"></h1>
+    <div class="header">
+        <h1>Tic Tac Toe</h1>
+        <p>By: Your Name</p>
+    </div>
+    
+    <div class="statusPanel">
         <h1 class="player"></h1>
     </div>
-    <div> 
-        <h1>Tic Tac Toe</h1>
-        <div class="gameboard">
+    <div class="game" style="display: none;"> 
+        <div class="gameboard" >
 
                 <div class="cell" id="0"></div>
                 <div class="cell" id="1"></div>
@@ -29,17 +31,28 @@
         </div>
         <button class="reset" disabled>Reset Game</button>
     </div>
-    <div class="player-name">
-        <h1>Enter Players Name</h1>
+    <div class="player-info">
+        <h1>Enter Players' Names</h1>
         <form id="playerForm">
-            <label for="playerName">Player 1 Name:</label>
-            <input type="text" id="player1-name" placeholder="Enter your name" required>
-            <label for="playerName">Player 2 Name:</label>
-            <input type="text" id="player2-name" placeholder="Enter your name" required>
+            <div class="player">
+                <label for="player1-name" id="player1-label">Player 1 Name:</label>
+                <input type="text" id="player1-name" name="player1" placeholder="Enter your name" required>
+            </div>
+    
+            <div class="player">
+                <label for="player2-name" id="player2-label">Player 2 Name:</label>
+                <input type="text" id="player2-name" name="player2" placeholder="Enter your name" required>
+            </div>
+    
             <button class="submitBtn" type="button">Start Game</button>
         </form>
-        
     </div>
+
+    <div class="scoreboard" style="display: none;">
+        <h1 class="player1-score"></h1>
+        <h1 class="player2-score"></h1>
+    </div>
+    
     <script src="script.js"></script>
 </body>
 </html>

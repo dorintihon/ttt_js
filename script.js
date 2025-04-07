@@ -162,7 +162,15 @@ const DisplayController = (() => {
     const renderBoard = () => {
         Gameboard.getBoard().forEach((mark, index) => {
             cells[index].textContent = mark === null ? "" : mark;
+
+            cells[index].classList.remove("X", "O");
+
+            if (mark === "X" || mark === "O") {
+                cells[index].classList.add(mark); // dynamically adds "X" or "O"
+            }
         });
+
+
     };
 
     const setMessage = msg => {
@@ -186,20 +194,38 @@ const DisplayController = (() => {
 
         renderBoard();
 
+
         if (GameLogic.checkWin(currentPlayer.getMark())) {
             setMessage(`${currentPlayer.getName()} wins!`);
+            e.target.style.backgroundColor = 'bisque';
+            cells.forEach(cell => {
+                cell.removeEventListener('mouseover', handleMouseOver);
+                cell.removeEventListener('mouseout', handleMouseOut);
+            });
+
+            
+            
+            
             currentPlayer.addScore();
             updateScores();
             removeCellClickEvents(); // Disable further clicks
+        
             return;
         }else if (GameLogic.checkDraw()) {
             setMessage("It's a draw!");
             removeCellClickEvents(); // Disable further clicks
+            cells.forEach(cell => {
+                if (cell.style.backgroundColor !== 'lightgreen') {
+                    cell.style.backgroundColor = 'lightgrey';
+                }
+            });
+            renderBoard();
             return;
         } else {
             GameLogic.switchPlayer();
             const nextPlayer = GameLogic.getCurrentPlayer();
             setMessage(`${nextPlayer.getName()}'s turn (${nextPlayer.getMark()})`);
+            e.target.removeEventListener('mouseover', handleMouseOver);
         }
     };
 
@@ -208,6 +234,7 @@ const DisplayController = (() => {
             GameLogic.resetGame();
             cells.forEach(cell => {
                 cell.addEventListener('click', handleCellClick);
+                cell.style.backgroundColor = 'bisque';
             });
             renderBoard();
             setMessage(`${GameLogic.getCurrentPlayer().getName()}'s turn (${GameLogic.getCurrentPlayer().getMark()})`);
@@ -227,10 +254,24 @@ const DisplayController = (() => {
 
             updateScores();
             setMessage(`${GameLogic.getCurrentPlayer().getName()}'s turn (${GameLogic.getCurrentPlayer().getMark()})`);
+
+            // 🔥 Switch views
+            document.querySelector('.player-info').style.display = 'none';
+            document.querySelector('.game').style.display = 'grid';
+            document.querySelector('.scoreboard').style.display = 'grid';
+
             
             // 🔥 Now bind cell click events since the game has officially started
             cells.forEach(cell => {
                 cell.addEventListener('click', handleCellClick);
+            });
+
+            cells.forEach(cell => {
+                cell.style.backgroundColor = 'bisque';
+                
+                cell.addEventListener('mouseover', handleMouseOver);
+                cell.addEventListener('mouseout', handleMouseOut);
+
             });
 
             resetButton.disabled = false;
@@ -238,6 +279,14 @@ const DisplayController = (() => {
             renderBoard();
         });
     };
+
+    function handleMouseOver(e) {
+        e.target.style.backgroundColor = "lightblue";
+    }
+
+    function handleMouseOut(e) {
+        e.target.style.backgroundColor = 'bisque';
+    }
     
 
     const init = () => {

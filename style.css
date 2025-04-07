@@ -8,12 +8,64 @@
 .cell {
     width: 100px;
     height: 100px;
-    background-color: bisque;
+    background-color: rgb(201, 200, 200);
 }
 
-.cell:hover {
-    background-color: lightblue;
+.scoreboard, .game, .gameboard, .player-info {
+    border: 1px solid black;
 }
-.row {
+
+.game {
+    display: grid;
+    grid-template-rows: min-content min-content min-content;
+}
+
+.game > *, .player-info > *, #playerForm > *, .statusPanel > * , .scoreboard > *{
+    margin: 0;
+    justify-self: center;
+}
+
+.player-info {
+    display: grid;
+    grid-template-rows: repeat(4, min-content);
+}
+
+#playerForm {
+    display: grid;
+    grid-template-rows: repeat(3, min-content);
+}
+.scoreboard {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+
+button {
+    width: 100px;
+    height: 30px;
+    border: 1px solid black;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.cell {
     display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 5em;
 }
+
+
+.X {
+    color: crimson;
+    font-family: 'Arial Black', sans-serif;
+}
+.O {
+    color: steelblue;
+    font-family: 'Arial Black', sans-serif;
+}
+
+
+
+
+
